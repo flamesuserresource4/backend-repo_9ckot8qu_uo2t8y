@@ -1,6 +1,11 @@
 import os
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
+from typing import Dict
+
+from schemas import Lead
+from database import create_document
 
 app = FastAPI()
 
@@ -19,6 +24,15 @@ def read_root():
 @app.get("/api/hello")
 def hello():
     return {"message": "Hello from the backend API!"}
+
+@app.post("/api/leads")
+def create_lead(lead: Lead) -> Dict[str, str]:
+    """Create a new lead document in MongoDB"""
+    try:
+        inserted_id = create_document("lead", lead)
+        return {"status": "success", "id": inserted_id}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/test")
 def test_database():
